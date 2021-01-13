@@ -40,7 +40,8 @@ Linux 3.10.0-1160.11.1.el7.x86_64
 ```
 ## 大版本升级
 我们使用[ELRepo](http://elrepo.org/tiki/HomePage)社区企业Linux仓库来升级CentOS内核版本。
-**
+
+
 **1.导入公钥**
 ```
 rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
@@ -83,6 +84,7 @@ awk -F \' '$1=="menuentry " {print i++ " : " $2}' /etc/grub2.cfg
 ```
 ![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610509488039-92bc38ef-9402-4d31-bc10-71876751f3c7.png#align=left&display=inline&height=86&margin=%5Bobject%20Object%5D&name=image.png&originHeight=172&originWidth=1214&size=44385&status=done&style=none&width=607)
 说明：默认启动的顺序是从0开始，新内核是从头插入。
+
 **9.查看当前启动顺序**
 ```
 grub2-editenv list
@@ -93,6 +95,7 @@ grub2-editenv list
 grub2-set-default 0
 ```
 ![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610517101761-eced2004-9a69-48f6-b81e-ffef96f21d34.png#align=left&display=inline&height=55&margin=%5Bobject%20Object%5D&name=image.png&originHeight=110&originWidth=808&size=17147&status=done&style=none&width=404)
+
 **11.reboot重启验证**
 ```
 [root@k8s-master ~]# uname -r
