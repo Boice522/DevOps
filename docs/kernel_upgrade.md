@@ -82,20 +82,31 @@ yum --disablerepo=\* --enablerepo=elrepo-kernel install kernel-lt-tools.x86_64 -
 ```
 awk -F \' '$1=="menuentry " {print i++ " : " $2}' /etc/grub2.cfg
 ```
-![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610509488039-92bc38ef-9402-4d31-bc10-71876751f3c7.png#align=left&display=inline&height=86&margin=%5Bobject%20Object%5D&name=image.png&originHeight=172&originWidth=1214&size=44385&status=done&style=none&width=607)
+```
+[root@k8s-master ~]# awk -F \' '$1=="menuentry " {print i++ " : " $2}' /etc/grub2.cfg
+0 : CentOS Linux (5.4.88-1.el7.elrepo.x86_64) 7 (Core)
+1 : CentOS Linux (3.10.0-1160.11.1.el7.x86_64) 7 (Core)
+2 : CentOS Linux (3.10.0-1160.el7.x86_64) 7 (Core)
+3 : CentOS Linux (0-rescue-a0274de3233e40f6a6b1bd50d702c580) 7 (Core)
+```
 说明：默认启动的顺序是从0开始，新内核是从头插入。
 
 **9.查看当前启动顺序**
 ```
 grub2-editenv list
 ```
-![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610517022740-94a384bf-bab6-4511-b3ef-288578a84374.png#align=left&display=inline&height=36&margin=%5Bobject%20Object%5D&name=image.png&originHeight=72&originWidth=918&size=15547&status=done&style=none&width=459)
+```
+[root@k8s-master ~]# grub2-editenv list
+saved_entry=CentOS Linux (3.10.0-1160.11.1.el7.x86_64) 7 (Core)
+```
 **10.设置默认启动**
 ```
 grub2-set-default 0
 ```
-![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610517101761-eced2004-9a69-48f6-b81e-ffef96f21d34.png#align=left&display=inline&height=55&margin=%5Bobject%20Object%5D&name=image.png&originHeight=110&originWidth=808&size=17147&status=done&style=none&width=404)
-
+```
+[root@k8s-master ~]# grub2-editenv list
+saved_entry=0
+```
 **11.reboot重启验证**
 ```
 [root@k8s-master ~]# uname -r
