@@ -27,8 +27,6 @@ CentOS Linux release 7.9.2009 (Core)
 ```
 # yum list kernel
 ```
-![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610445703721-af9d0ecf-a47d-4011-bd7c-474b20a3a335.png#align=left&display=inline&height=190&margin=%5Bobject%20Object%5D&name=image.png&originHeight=380&originWidth=2876&size=86054&status=done&style=none&width=1438)
-
 **3.升级内核**
 ```
 [root@k8s-master yum.repos.d]# yum update kernel -y
