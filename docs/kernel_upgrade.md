@@ -39,8 +39,7 @@ yum update kernel -y
 Linux 3.10.0-1160.11.1.el7.x86_64
 ```
 ## 大版本升级
-我们使用[ELRepo](http://elrepo.org/tiki/HomePage)社区企业Linux仓库来升级CentOS内核版本。
-
+我们使用[ELRepo](http://elrepo.org/tiki/HomePage)社区企业Linux仓库来升级CentOS内核版本，可以在[Linux内核官网](https://www.kernel.org/category/releases.html)查看最新版本以及各版本维护支持时间。建议安装长期支持版本。
 
 **1.导入公钥**
 ```
