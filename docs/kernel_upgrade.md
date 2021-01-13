@@ -68,17 +68,27 @@ ml:mainline的缩写：最新稳定版；
 ```
 yum --disablerepo=\* --enablerepo=elrepo-kernel install kernel-lt.x86_64 -y
 ```
-**6.卸载旧版本工具包**
-
-![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610509103886-7e4c437d-0e08-4183-a952-3feea116ed93.png#align=left&display=inline&height=106&margin=%5Bobject%20Object%5D&name=image.png&originHeight=212&originWidth=830&size=36995&status=done&style=none&width=415)
+**6.查看现有工具包**
+```
+rpm -qa | grep kernel
+```
+```
+[root@k8s-master ~]# rpm -qa | grep kernel
+kernel-3.10.0-1160.el7.x86_64
+kernel-tools-libs-3.10.0-1160.el7.x86_64
+kernel-lt-5.4.88-1.el7.elrepo.x86_64
+kernel-tools-3.10.0-1160.el7.x86_64
+kernel-3.10.0-1160.11.1.el7.x86_64
+```
+**7.卸载旧版本工具包**
 ```
 yum remove kernel-tools-libs.x86_64 kernel-tools.x86_64  -y
 ```
-**7.安装新版本工具包**
+**8.安装新版本工具包**
 ```
 yum --disablerepo=\* --enablerepo=elrepo-kernel install kernel-lt-tools.x86_64 -y
 ```
-**8.查看内核启动顺序**
+**9.查看内核启动顺序**
 ```
 awk -F \' '$1=="menuentry " {print i++ " : " $2}' /etc/grub2.cfg
 ```
@@ -91,7 +101,7 @@ awk -F \' '$1=="menuentry " {print i++ " : " $2}' /etc/grub2.cfg
 ```
 说明：默认启动的顺序是从0开始，新内核是从头插入。
 
-**9.查看当前启动顺序**
+**10.查看当前启动顺序**
 ```
 grub2-editenv list
 ```
@@ -99,7 +109,7 @@ grub2-editenv list
 [root@k8s-master ~]# grub2-editenv list
 saved_entry=CentOS Linux (3.10.0-1160.11.1.el7.x86_64) 7 (Core)
 ```
-**10.设置默认启动**
+**11.设置默认启动**
 ```
 grub2-set-default 0
 ```
@@ -107,7 +117,7 @@ grub2-set-default 0
 [root@k8s-master ~]# grub2-editenv list
 saved_entry=0
 ```
-**11.reboot重启验证**
+**12.reboot重启验证**
 ```
 [root@k8s-master ~]# uname -r
 5.4.88-1.el7.elrepo.x86_64
