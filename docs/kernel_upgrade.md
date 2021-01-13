@@ -23,18 +23,17 @@ Linux 3.10.0-1160.el7.x86_64
 CentOS Linux release 7.9.2009 (Core)
 ```
 
-
 **2.查看可以升级的内核版本**
 ```
 # yum list kernel
 ```
 ![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610445703721-af9d0ecf-a47d-4011-bd7c-474b20a3a335.png#align=left&display=inline&height=190&margin=%5Bobject%20Object%5D&name=image.png&originHeight=380&originWidth=2876&size=86054&status=done&style=none&width=1438)
 
-
 **3.升级内核**
 ```
 [root@k8s-master yum.repos.d]# yum update kernel -y
 ```
+
 **4.重启并查看**
 ```
 [root@k8s-master ~]# reboot
@@ -63,8 +62,6 @@ yum --disablerepo=\* --enablerepo=elrepo-kernel list kernel*
 ![image.png](https://cdn.nlark.com/yuque/0/2021/png/366760/1610447584758-57fd9e7a-9bc5-45ae-9c78-4000f924f0bb.png#align=left&display=inline&height=431&margin=%5Bobject%20Object%5D&name=image.png&originHeight=862&originWidth=2868&size=224275&status=done&style=none&width=1434)内核版本介绍：
 lt:longterm的缩写：长期维护版；
 ml:mainline的缩写：最新稳定版；
-
-
 **5.安装内核（长期维护版本）**
 ```
 yum --disablerepo=\* --enablerepo=elrepo-kernel install kernel-lt.x86_64 -y
@@ -99,6 +96,4 @@ grub2-set-default 0
 [root@k8s-master ~]# uname -r
 5.4.88-1.el7.elrepo.x86_64
 ```
-
-
 **参考：**[https://www.cnblogs.com/ding2016/p/10429640.html](https://www.cnblogs.com/ding2016/p/10429640.html)
