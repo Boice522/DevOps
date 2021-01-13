@@ -25,11 +25,11 @@ CentOS Linux release 7.9.2009 (Core)
 
 **2.查看可以升级的内核版本**
 ```
-# yum list kernel
+yum list kernel
 ```
 **3.升级内核**
 ```
-[root@k8s-master yum.repos.d]# yum update kernel -y
+yum update kernel -y
 ```
 
 **4.重启并查看**
@@ -87,6 +87,13 @@ yum remove kernel-tools-libs.x86_64 kernel-tools.x86_64  -y
 **8.安装新版本工具包**
 ```
 yum --disablerepo=\* --enablerepo=elrepo-kernel install kernel-lt-tools.x86_64 -y
+```
+```
+[root@k8s-master ~]# rpm -qa | grep kernel
+kernel-3.10.0-1160.el7.x86_64
+kernel-lt-5.4.88-1.el7.elrepo.x86_64
+kernel-3.10.0-1160.11.1.el7.x86_64
+kernel-ml-tools-libs-5.10.6-1.el7.elrepo.x86_64
 ```
 **9.查看内核启动顺序**
 ```
