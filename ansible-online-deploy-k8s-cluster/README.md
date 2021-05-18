@@ -18,6 +18,10 @@ yum clean all && yum makecache
 yum install ansible -y
 ```
 ## ansible配置
+```
+# 检测ansible到集群节点
+ansible -i hosts all -m ping
+```
 使用默认ansible.cfg即可，这也我也附上了ansible.cfg的配置。建议ansible到集群机器做免密，也可以设置同样的密码通过-k来传递密码。
 主要就是hosts文件，按照实际情况修改即可
 ```

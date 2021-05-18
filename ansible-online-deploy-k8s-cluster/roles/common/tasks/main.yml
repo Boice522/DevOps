@@ -1,5 +1,7 @@
 ---
 # 这个剧本在所有节点上运行
+- import_tasks: aliyun-repo.yml
+
 - name: 0.安装常用命令
   yum: 
     name: ['vim','unzip','wget','net-tools'] 

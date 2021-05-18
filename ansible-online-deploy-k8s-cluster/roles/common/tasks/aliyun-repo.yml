@@ -1,0 +1,15 @@
+---
+- name: 下载aliyunrepo
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    force: yes
+    timeout: 10
+    backup: yes
+  with_items:
+    - { url: "https://mirrors.aliyun.com/repo/Centos-7.repo", dest: "/etc/yum.repos.d/CentOS-Base.repo" }
+    - { url: "https://mirrors.aliyun.com/repo/epel-7.repo", dest: "/etc/yum.repos.d/epel.repo" }
+
+- name: yum makecache
+  shell: yum clean all && yum makecache
+  ignore_errors: yes
