@@ -1,0 +1,15 @@
+---
+- name: 1.添加repo源码
+  copy: src=kubernetes.repo dest=/etc/yum.repos.d/kubernetes.repo
+ 
+- name: 2.安装组件
+  yum:
+    name: 
+    - kubelet-{{ k8s_version }}
+    - kubeadm-{{ k8s_version }}
+    - kubectl-{{ k8s_version }}
+    state: installed
+    exclude: kubernetes
+
+- name: 3.kubelet开机自启
+  systemd: name=kubelet state=started enabled=yes

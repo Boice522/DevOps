@@ -1,0 +1,27 @@
+---
+- name: 1.安装keealived和haproxy
+  yum: 
+    name:
+    - keepalived
+    - haproxy
+    state: present
+
+- name: 2.分发haproxy.cng
+  template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg
+
+- name: 3.分发keepalived配置
+  template: src=keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf
+
+- name: 4.拷贝ha健康监测脚本
+  copy: src=check_apiserver.sh dest=/etc/keepalived/ mode=755
+
+- name: 5.开机自动服务
+  systemd: name={{ item }} state=restarted enabled=yes daemon_reload=yes
+  with_items:
+    - haproxy
+    - keepalived
+
+- name: 6.添加k8s-lbhosts解析
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ lb_vip }} {{ lb_name }}"

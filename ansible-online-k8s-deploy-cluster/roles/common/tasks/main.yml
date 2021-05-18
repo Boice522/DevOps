@@ -1,0 +1,84 @@
+---
+# 这个剧本在所有节点上运行
+- name: 0.安装常用命令
+  yum: 
+    name: ['vim','unzip','wget','net-tools'] 
+    state: present
+
+- name: 1.修改hostname
+  shell: hostnamectl set-hostname {{ node_name }}
+
+- name: 2.添加hosts
+  template: src=hosts.j2 dest=/etc/hosts 
+
+- name: 3.关闭firewalld
+  service: name=firewalld state=stopped enabled=no
+
+- name: 4.关闭selinux
+  lineinfile:
+    dest: /etc/selinux/config
+    regexp: "^SELINUX="
+    line: "SELINUX=disabled"
+  
+- name: 5.关闭swap
+  lineinfile:
+    dest: /etc/fstab
+    regexp: ".*swap"
+    line: ""
+
+- name: 6.即时生效
+  shell: setenforce 0 ; swapoff -a
+
+- name: 7.拷贝时区
+  copy: src=/usr/share/zoneinfo/Asia/Shanghai dest=/etc/localtime
+
+- name: 8.配置ulimit
+  lineinfile:
+    dest: /etc/security/limits.conf
+    line: "{{ item }}"
+  with_items:
+    - "* soft nofile 65536"
+    - "* hard nofile 65536"
+
+- name: 9.内核参数修改
+  copy: src=k8s.conf dest=/etc/sysctl.d/k8s.conf
+
+- name: 10.内核配置生效
+  shell: modprobe br_netfilter ; sysctl -p /etc/sysctl.d/k8s.conf
+
+- name: 11.安装chrony
+  yum: name=chrony state=present
+
+- name: 12.分发chrony.conf
+  template: src=chrony.conf.j2 dest=/etc/chrony.conf 
+
+- name: 13.开启chronyd时间同步服务
+  service: name=chronyd state=restarted enabled=yes
+
+- name: 14.拷贝内核rpm包
+  copy: src={{ item }} dest=/tmp
+  with_items:
+    - kernel-ml-4.19.12-1.el7.elrepo.x86_64.rpm
+    - kernel-ml-devel-4.19.12-1.el7.elrepo.x86_64.rpm
+
+- name: 15.升级内核
+  yum:
+    name: 
+    - /tmp/kernel-ml-4.19.12-1.el7.elrepo.x86_64.rpm
+    - /tmp/kernel-ml-devel-4.19.12-1.el7.elrepo.x86_64.rpm 
+    state: present    
+
+- name: 16.设置内核启动顺序
+  shell: grub2-set-default 0 && grub2-mkconfig -o /etc/grub2.cfg
+
+- name: 17.重启node
+  shell: sleep 5 && shutdown -r now "Ansible reboot"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  register: result
+- debug:
+    var: result
+
+- name: 18.等代node重启50s
+  pause: seconds=50

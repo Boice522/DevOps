@@ -1,0 +1,34 @@
+---
+- name: 获取calico版本{{ calico_version }}配置
+  get_url:
+    url: "https://docs.projectcalico.org/{{ calico_version }}/manifests/calico.yaml"
+    dest: "{{ k8s_work_dir }}"
+    mode: 0644
+    force: yes
+    validate_certs: no
+
+- name: 修改配置IPV4POOL
+  lineinfile:
+    dest: "{{ k8s_work_dir }}/calico.yaml"
+    insertbefore: '# - name: CALICO_IPV4POOL_CIDR'   
+    line: "{{ item }}"
+  with_items:
+    - "            - name: CALICO_IPV4POOL_CIDR"
+    - '              value: "{{ pod_cidr }}"'
+
+- name: 指定网卡{{ nic_name }} 
+  lineinfile:
+    dest: "{{ k8s_work_dir }}/calico.yaml"
+    insertbefore: '- name: WAIT_FOR_DATASTORE'
+    line: "{{ item }}"
+  with_items:
+    - "            - name: IP_AUTODETECTION_METHOD"
+    - "              value: interface={{ nic_name }}"
+
+#- name: 获取calico.yaml
+#  template: src=calico.yaml.j2 dest={{ k8s_work_dir }}/calico.yaml
+
+- name: 安装calico
+  shell: kubectl apply -f {{ k8s_work_dir }}/calico.yaml 
+  register: install_calico_info
+- debug: var=install_calico_info.stdout_lines verbosity=0
