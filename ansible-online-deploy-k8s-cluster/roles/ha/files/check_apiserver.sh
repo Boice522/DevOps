@@ -1,7 +1,7 @@
 #!/bin/bash
 
 err=0
-for k in $(seq 1 2)
+for k in $(seq 1 3)
 do
     check_code=$(pgrep haproxy)
     if [[ $check_code == "" ]]; then
