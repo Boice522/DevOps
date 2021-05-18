@@ -1,0 +1,27 @@
+---
+- name: 分发dashboard配置
+  template: src=recommended.yaml.j2 dest={{ k8s_work_dir }}/recommended.yaml
+
+- name: 安装dashboard
+  shell: kubectl apply -f {{ k8s_work_dir }}/recommended.yaml
+  register: install_dashboard_info
+- debug: var=install_dashboard_info.stdout_lines verbosity=0  
+  
+- name: 创建dashboard管理员token
+  ignore_errors: yes 
+  shell: kubectl create clusterrolebinding dashboard-cluster-admin --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:kubernetes-dashboard
+
+- name: 获取dashboard管理员token
+  ignore_errors: yes
+  shell: |
+         web='https://{{ lb_vip }}:{{ dashboard_port }}'
+         token=$(kubectl describe secrets -n kubernetes-dashboard \
+         $(kubectl get secret -n kubernetes-dashboard | awk '/dashboard-token/{print $1}') |awk '/^token/{print $2}')
+         echo "访问地址--->$web"
+         echo "令牌内容--->$token"
+         echo "保存文件dashbord-url-token"
+         echo $web > {{ k8s_work_dir }}/dashbord-url-token
+         echo $token >> {{ k8s_work_dir }}/dashbord-url-token
+  register: ui
+- name: Kubernetes Dashboard登录信息
+  debug: var=ui.stdout_lines

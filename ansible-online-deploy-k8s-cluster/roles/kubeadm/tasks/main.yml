@@ -1,0 +1,82 @@
+---
+- name: 创建k8s工作目录
+  file: path={{ k8s_work_dir }} state=directory mode=755
+
+- block:
+  - name: 1.分发kubeadm.yaml到{{ k8s_work_dir }}
+    template: src=kubeadm.yaml.j2 dest={{ k8s_work_dir }}/kubeadm.yaml
+
+  - name: 2.下载镜像
+    shell: kubeadm config images pull --config {{ k8s_work_dir }}/kubeadm.yaml
+    ignore_errors: True
+    register: pull_info
+  - debug: var=pull_info.stdout_lines verbosity=0 
+  when: cluster_role!='node'
+
+# 初始化master01节点
+- block:
+  - name: 初始化master01节点
+    shell: kubeadm init --config {{ k8s_work_dir }}/kubeadm.yaml --upload-certs |tee {{ k8s_work_dir }}/token.log
+    ignore_errors: True
+    register: kubeadm_init_info
+
+  - name: 查看初始化日志
+    debug: var=kubeadm_init_info.stdout_lines verbosity=0
+  
+  - name: 创建目录.kube
+    file: path=$HOME/.kube state=directory   
+
+  - name: 设置环境变量
+    shell: cp -rf /etc/kubernetes/admin.conf $HOME/.kube/config; chown $(id -u):$(id -g) $HOME/.kube/config
+  
+  - name: 获取加入集群token 
+    shell: kubeadm token create --print-join-command | tee /tmp/join-worker.sh
+    register: cluster_token
+  - debug: var=cluster_token.stdout_lines verbosity=0
+
+  - name: 制作join-worker.sh脚本
+    shell: sed 's/^/\#\!\/bin\/bash\n&/g' /tmp/join-worker.sh
+
+  - name: 获取CA-key
+    shell: echo $(egrep 'control-plane.*certificate-key' {{ k8s_work_dir }}/token.log)
+    register: ca_key
+  - debug: var=ca_key.stdout_lines verbosity=0  
+  
+  - name: 制作join-master.sh脚本
+    shell: sed 's/$/{{ca_key.stdout}}/' /tmp/join-worker.sh > /tmp/join-master.sh
+
+  - name: 拷贝join-worker.sh脚本到ansible
+    fetch: src=/tmp/join-worker.sh dest=/root/ flat=yes
+  
+  - name: 拷贝join-master.sh脚本到ansible
+    fetch: src=/tmp/join-master.sh dest=/root/ flat=yes
+  # 安装calico插件
+  - import_tasks: install_calico.yml
+  when: cluster_role=='master'
+
+ # 将master节点加入集群
+- block:
+  - name: 将join-master.sh脚本分发到master节点
+    copy: src=/root/join-master.sh dest={{ k8s_work_dir }}/
+
+  - name: 将master加入集群
+    shell: bash {{ k8s_work_dir }}/join-master.sh | tee {{ k8s_work_dir }}/k8s-master-join.log
+    ignore_errors: True
+    register: k8s_master_join_info
+  - debug: var=k8s_master_join_info.stdout_lines verbosity=0
+  
+  - name: 设置环境变量
+    shell: mkdir -p $HOME/.kube && cp -rf /etc/kubernetes/admin.conf $HOME/.kube/config && chown $(id -u):$(id -g) $HOME/.kube/config
+  when: cluster_role=='backup' 
+
+# 将node节点加入集群
+- block:
+  - name: 将join-worker.sh脚本分发到node节点
+    copy: src=/root/join-worker.sh dest={{ k8s_work_dir }}/
+
+  - name: 将node加入集群
+    shell: bash {{ k8s_work_dir }}/join-worker.sh | tee {{ k8s_work_dir }}/k8s-worker-join.log
+    ignore_errors: True
+    register: k8s_worker_join_info
+  - debug: var=k8s_worker_join_info.stdout_lines verbosity=0
+  when: cluster_role=='node'

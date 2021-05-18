@@ -1,0 +1,23 @@
+---
+- name: 下载yaml，Using NodePort
+  get_url:
+    url: https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v{{ ingress_version }}/deploy/static/provider/baremetal/deploy.yaml
+    dest: "{{ k8s_work_dir }}/ingress-nginx.yaml"
+
+- name: 修改nodeport-80
+  lineinfile:
+    dest: "{{ k8s_work_dir }}/ingress-nginx.yaml"
+    insertafter: 'port: 80'
+    line: '      nodePort: {{ ingress_http_port }}'
+
+- name: 修改nodeport-443
+  lineinfile:
+    dest: "{{ k8s_work_dir }}/ingress-nginx.yaml"
+    insertafter: 'port: 443'
+    line: '      nodePort: {{ ingress_https_port }}'
+
+- name: 安装ingress-nginx
+  shell: kubectl apply -f {{ k8s_work_dir }}/ingress-nginx.yaml
+  ignore_errors: yes
+  register: ingress_info
+- debug: var=ingress_info.stdout_lines verbosity=0
