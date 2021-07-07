@@ -1,9 +1,9 @@
-# Ansible offline deploy kuberbetes cluster
-主要用于快速部署Kubernetes1.20高可用集群
+# Ansible elasticsearch cluster offline install
+主要用于快速部署elasticsearch高可用集群
 
 ## 说明
-通过kubeadm，以在线的模式部署Kubernetes集群，目前已验证支持1.20.4-6版本。通过ansible-playbook一键部署。
-etcd采用Stacked方式，高可用采用keepalived+haproxy方式，默认kube-proxy使用ipvs方式，加入了dashboard、ingress-nginx、metrics。
+由于是内网环境，所以采用离线部署的方式，其中JDK和Elasticsearch安装包并有上传至仓库，需要自己下载并放到files目录下面
+实验中采用jdk版本为11.0.11，es版本为7.6.2
 
 ## anshible
 安装ansible工具
@@ -23,26 +23,16 @@ yum install ansible -y
 主要就是hosts文件，按照实际情况修改即可
 ```
 [master]
-# 如果部署单Master，只保留一个Master节点
-# 默认Naster节点也部署Node组件
-192.168.50.201 node_name=k8s-master01 cluster_role=master
-192.168.50.202 node_name=k8s-master02 cluster_role=backup
-192.168.50.203 node_name=k8s-master03 cluster_role=backup
-
-# node节点可以随便加，cluster_role必填，值为node即可
-[node]
-192.168.50.204 node_name=k8s-node01 cluster_role=node
-192.168.50.205 node_name=k8s-node02 cluster_role=node
-
-# 如果是单master，这可以可以不写
-[lb]
-192.168.50.201 lb_role=MASTER keepalived_priority=100
-192.168.50.202 lb_role=BACKUP keepalived_priority=90
-192.168.50.203 lb_role=BACKUP keepalived_priority=80
-
-[k8s:children]
+10.2.49.101 node_name=bigdata-master01
+10.2.49.102 node_name=bigdata-master02
+10.2.49.103 node_name=bigdata-master03
+[data]
+10.2.49.104 node_name=bigdata-data01
+10.2.49.105 node_name=bigdata-data02
+10.2.49.106 node_name=bigdata-data03
+[escluster:children]
 master
-node
+data
 ```
 检测ansible到集群节点是否能连通
 ```
@@ -50,48 +40,39 @@ ansible -i hosts all -m ping
 ```
 其次还有变量，在group_vars/all.yml定义
 ```
-# 工作目录
-k8s_work_dir: '/opt/kubernetes'
+# 安装包存放目录
+es_package_name: 'elasticsearch-7.6.2-linux-x86_64.tar.gz'
 
-# docker版本
-docker_version: 'docker-ce-19.03.15-3.el7'
+# es用户
+es_user: 'elasticsearch'
 
-# kubernetes版本
-k8s_version: '1.20.5'
+# es版本
+es_version: '7.6.2'
 
-# 网卡名称
-nic_name: 'ens33'
+# es集群名称
+es_cluster_name: 'bigdata-es-cluster'
 
-# lb名称
-lb_name: 'k8s-lb'
-# keealived VIP
-lb_vip: '192.168.50.200'
-# lb端口
-vip_port: '16443'
-ha_stats_port: '8888'
+# 数据和日志存放路径
+es_data_dirs: '/data/elasticsearch'
 
-#集群网络
-service_cidr: '10.96.0.0/24'
-pod_cidr: '172.16.0.0/16'
-image_repository: 'registry.cn-hangzhou.aliyuncs.com/google_containers'
-service_nodeport_range: '80-32767'
+# 是否允许跨域
+http_cors: true
 
-# calico版本,大版本即可
-calico_version: 'v3.18'
+# 是否开启认证
+xpack_security_enabled: true
 
-# Dashboard，NodePort类型,端口号范围参考service_nodeport_range变量
-dashboard_port: '30001'
+# JVM 宿主机内存一半
+es_master_heap_size: '2g'
+es_data_heap_size: '2g'
 
-# ingress-nginx，port范围参考service_nodeport_range变量
-ingress_version: '0.46.0'
-ingress_http_port: '80'
-ingress_https_port: '30443'
+# 是否升级jdk
+update_jdk: true
 ```
 ## 部署Kubernetes集群
 ```
-cd ansible-online-deploy-k8s-cluster
-ansible-playbook -i hosts cluster-initialization.yml
+cd elastic_offline_install
+ansible-playbook -i hosts install_es.yaml -k
 # 如果只需执行其中部分可以使用tag来选择
-ansible-playbook -i hosts cluster-initialization.yml --tags "ha"
+ansible-playbook -i hosts cluster-initialization.yml --tags ""
 ```
 
