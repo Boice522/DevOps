@@ -1,0 +1,40 @@
+cluster.name: {{ es_cluster_name }}
+node.name: {{ node_name }}
+{% if inventory_hostname in groups.master %}
+node.master: true
+node.data: false
+{% elif inventory_hostname in groups.data %}
+node.master: false
+node.data: true
+{% else %}
+node.master: false
+node.data: false
+{% endif %}
+node.ingest: false
+network.host: {{ inventory_hostname }}
+bootstrap.memory_lock: true
+http.port: 9200
+transport.port: 9300
+discovery.seed_hosts: [{% for host in groups['escluster'] %}
+"{{ host }}:9300"
+{%- if not loop.last %},{% endif %}
+{% endfor %}]
+cluster.initial_master_nodes: [{% for host in groups['master'] %}
+"{{ hostvars[host].node_name }}"
+{%- if not loop.last %},{% endif %}
+{% endfor %}]
+path.data: {{ es_data_dirs }}/data
+path.logs: {{ es_data_dirs }}/logs
+# 增加参数，使head插件可以跨域访问es
+{% if http_cors == true %}
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+{% endif %}
+{% if xpack_security_enabled == true %}
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.keystore.path: {{ es_conf_dir }}/elastic-certificates.p12
+xpack.security.transport.ssl.truststore.path: {{ es_conf_dir }}/elastic-certificates.p12
+xpack.security.audit.enabled: true
+{% endif %}

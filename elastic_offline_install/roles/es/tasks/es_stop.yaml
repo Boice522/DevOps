@@ -1,0 +1,9 @@
+---
+- name: get elasticsearch PID
+  shell: ps -ef | grep elasticsearch |grep -v root | grep java | awk '{print $2}'
+  register: es_pid
+  ignore_errors: true
+
+- name: kill elasticsearch 
+  shell: kill -9 {{es_pid.stdout}}
+  when: es_pid.stdout != ""

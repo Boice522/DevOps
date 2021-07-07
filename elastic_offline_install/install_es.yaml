@@ -1,0 +1,17 @@
+---
+- name: common
+  gather_facts: false
+  hosts: escluster 
+  roles:
+    - common
+  tags: 
+    - common 
+
+
+- name: install es
+  gather_facts: false
+  hosts: escluster
+  roles:
+    - es
+  tags:
+    - es-install

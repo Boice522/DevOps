@@ -1,0 +1,64 @@
+---
+- name: Create group {{ es_user }}
+  group: name={{ es_user }}
+
+- name: Create user {{ es_user }}
+  user: name={{ es_user }} group={{ es_user }} 
+
+- name: Remove directory {{ es_data_dirs }} if it exist 
+  file:
+    path: "{{ es_data_dirs }}"
+    state: absent
+
+- name: Create directory {{ es_data_dirs }}
+  file:
+    path: "{{ es_data_dirs }}"
+    state: directory
+    mode: 0755
+    owner: "{{ es_user }}"
+    group: "{{ es_user }}"
+
+- name: alter limits.conf
+  lineinfile:
+    dest: /etc/security/limits.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: "^\\*(.*)soft(.*)nofile", line: "* soft nofile 100000" }
+    - { regexp: "^\\*(.*)hard (.*)nofile", line: "* hard nofile 100000" }
+    - { regexp: "^\\*(.*)soft(.*)nproc", line: "* soft nproc 4096" }
+    - { regexp: "^\\*(.*)hard(.*)nproc", line: "* hard nproc 4096" }
+    - { regexp: "^\\*(.*)soft(.*)memlock", line: "* soft memlock unlimited" }
+    - { regexp: "^\\*(.*)hard(.*)memlock", line: "* hard memlock unlimited" }
+
+- name: alter sysctl.conf
+  copy: src=sysctl.conf dest=/etc/sysctl.conf mode=0644
+ 
+- name: Make the kernel take effect
+  shell: sysctl -p
+
+- name: get java vesion
+  shell: java -version 2>&1 | grep version |awk '{print $3}' | sed 's/"//g'
+  register: java_version
+  ignore_errors: true
+
+
+- block:
+  - name: copy jdk file
+    copy: src=jdk-11.0.11_linux-x64_bin.tar.gz dest=/tmp
+  
+  - name: unarchive jdk to /opt
+    unarchive:
+      remote_src: yes
+      src: "/tmp/jdk-11.0.11_linux-x64_bin.tar.gz"
+      dest: "/opt"
+
+  - name: set java ENV
+    shell:
+      cmd: |
+            cat > /etc/profile.d/java.sh <<EOF
+            export JAVA_HOME=/opt/jdk-11.0.11
+            export PATH=\$JAVA_HOME/bin:\$PATH
+            EOF
+            source /etc/profile 
+  when: java_version.rc != 0 or java_version.stdout is version_compare(11.0,"<") or update_jdk == true

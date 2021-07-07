@@ -1,0 +1,11 @@
+---
+- name: start elasticsearch
+  shell: cd {{ es_bin_dir }} && nohup ./elasticsearch -d &
+  become: yes
+  become_user: "{{ es_user }}"
+
+- name: wait_for 9200
+  wait_for:
+    host: "{{inventory_hostname}}"
+    port: 9200
+    delay: 10

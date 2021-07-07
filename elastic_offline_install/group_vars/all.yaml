@@ -1,0 +1,27 @@
+# 安装包存放目录
+es_package_name: 'elasticsearch-7.6.2-linux-x86_64.tar.gz'
+
+# es用户
+es_user: 'elasticsearch'
+
+# es版本
+es_version: '7.6.2'
+
+# es集群名称
+es_cluster_name: 'bigdata-es-cluster'
+
+# 数据和日志存放路径
+es_data_dirs: '/data/elasticsearch'
+
+# 是否允许跨域
+http_cors: true
+
+# 是否开启认证
+xpack_security_enabled: true
+
+# JVM 宿主机内存一半
+es_master_heap_size: '2g'
+es_data_heap_size: '2g'
+
+# 是否升级jdk
+update_jdk: true

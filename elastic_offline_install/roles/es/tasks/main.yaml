@@ -1,0 +1,55 @@
+---
+- name: set fact
+  set_fact:
+    es_work_dir: "/home/{{ es_user }}"
+    es_version: "{{ es_package_name.split('-')[1] }}"
+
+- set_fact: 
+    es_major_version: "{{ es_version.split('.')[0] }}.x"
+    es_conf_dir: "{{ es_work_dir }}/elasticsearch-{{ es_version }}/config"
+    es_bin_dir: "{{ es_work_dir }}/elasticsearch-{{ es_version }}/bin"
+
+- name: stop elastic
+  include_tasks: es_stop.yaml
+
+- name: empty {{ es_work_dir }}
+  shell: rm -rf {{ es_work_dir }}/*
+
+
+- name: cp es package to remote host
+  copy: src={{ es_package_name }} dest=/tmp
+
+- name: unarchive package to {{ es_work_dir }}
+  unarchive:
+    remote_src: yes
+    src: /tmp/{{ es_package_name }}
+    dest: "{{ es_work_dir }}"
+    owner: "{{ es_user }}"
+    group: "{{ es_user }}"
+    mode: 0755
+
+- name: copyp elasticsearch.yml
+  template:
+    src: elasticsearch.yml.j2
+    dest: "{{ es_conf_dir }}/elasticsearch.yml"
+    owner: "{{ es_user }}"
+    group: "{{ es_user }}"
+    mode: "755"
+    force: yes
+
+- name: copy jvm.options
+  template:
+    src: jvm.options.j2
+    dest: "{{ es_conf_dir }}/jvm.options"
+    owner: "{{ es_user }}"
+    group: "{{ es_user }}"
+    mode: "755"
+    force: yes
+
+- name: copy elastic-certificates.p12
+  copy: src=elastic-certificates.p12 dest={{ es_conf_dir }} owner={{ es_user }} group={{ es_user }} mode=755
+
+- name: start elastic
+  include_tasks: es_start.yaml
+
+

@@ -1,0 +1,12 @@
+[master]
+10.2.49.101 node_name=bigdata-master01
+10.2.49.102 node_name=bigdata-master02
+10.2.49.103 node_name=bigdata-master03
+[data]
+10.2.49.104 node_name=bigdata-data01
+10.2.49.105 node_name=bigdata-data02
+10.2.49.106 node_name=bigdata-data03
+[escluster:children]
+master
+data
+
